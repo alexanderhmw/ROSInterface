@@ -12,6 +12,7 @@
 #include<ros/callback_queue.h>
 #include<qreadwritelock.h>
 #include<qfileinfo.h>
+#include<qthread.h>
 
 #ifndef INITROSMASTERURI
 #define INITROSMASTERURI "http://localhost:11311"
@@ -25,6 +26,7 @@ public:
     ~ROSInterfaceBase();
 protected:
     ros::NodeHandle * nh;
+    QThread thread;
 };
 
 template<class MSGTYPE>

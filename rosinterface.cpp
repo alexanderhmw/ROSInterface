@@ -18,10 +18,14 @@ ROSInterfaceBase::ROSInterfaceBase(QString NodeName, QString ROSMasterURI, QObje
 
     ros::init(argc,&argv,NodeName.toStdString());
     nh=new ros::NodeHandle;
+    this->moveToThread(&thread);
+    thread.start();
 }
 
 ROSInterfaceBase::~ROSInterfaceBase()
 {
+    thread.exit();
+    thread.wait();
     if(nh!=NULL)
     {
         if(nh->ok())
