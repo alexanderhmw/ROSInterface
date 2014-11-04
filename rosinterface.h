@@ -13,6 +13,7 @@
 #include<qreadwritelock.h>
 #include<qfileinfo.h>
 #include<qthread.h>
+#include<qdebug.h>
 
 #ifndef INITROSMASTERURI
 #define INITROSMASTERURI "http://localhost:11311"
@@ -101,15 +102,13 @@ public:
     ~ROSSub();
 public:
     void receiveMessageCallback(const MSGTYPE & msg);
-public:
-    typedef boost::shared_ptr<MSGTYPE> ROSSubMsgPtr;
 protected:
     ros::Subscriber sub;
-    QQueue<ROSSubMsgPtr> msgptrs;
+    QQueue<MSGTYPE> msgs;
 protected:
     void clearMessage();
 public:
-    ROSSubMsgPtr getMessagePtr();
+    MSGTYPE getMessage();
 };
 
 template<class MSGTYPE>
@@ -130,10 +129,8 @@ void ROSSub<MSGTYPE>::receiveMessageCallback(const MSGTYPE & msg)
 {
     lock.lockForWrite();
     if(receiveflag)
-    {
-        ROSSub<MSGTYPE>::ROSSubMsgPtr msgptr=ROSSub<MSGTYPE>::ROSSubMsgPtr(new MSGTYPE);
-        *msgptr=msg;
-        msgptrs.push_back(msgptr);
+    {        
+        msgs.push_back(msg);
     }
     lock.unlock();
 }
@@ -141,21 +138,21 @@ void ROSSub<MSGTYPE>::receiveMessageCallback(const MSGTYPE & msg)
 template<class MSGTYPE>
 void ROSSub<MSGTYPE>::clearMessage()
 {
-    msgptrs.clear();
+    msgs.clear();
 }
 
 template<class MSGTYPE>
-typename ROSSub<MSGTYPE>::ROSSubMsgPtr ROSSub<MSGTYPE>::getMessagePtr()
+MSGTYPE ROSSub<MSGTYPE>::getMessage()
 {
-    ROSSub<MSGTYPE>::ROSSubMsgPtr msgptr;
+    MSGTYPE msg;
     lock.lockForRead();
-    if(receiveflag&&!msgptrs.isEmpty())
+    if(receiveflag&&!msgs.isEmpty())
     {
-        msgptr=msgptrs.front();
-        msgptrs.pop_front();
+        msg=msgs.front();
+        msgs.pop_front();
     }
     lock.unlock();
-    return msgptr;
+    return msg;
 }
 
 #endif // ROSINTERFACE_H
